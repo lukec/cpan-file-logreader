@@ -4,6 +4,54 @@ use warnings;
 use Digest::SHA1 qw/sha1_hex/;
 use YAML qw/DumpFile LoadFile/;
 
+=head1 NAME
+
+File::LogReader - tail log files with state between runs
+
+=cut
+
+=head1 SYNOPSIS
+
+Tail log files across multiple runs over time.
+
+    use File::LogReader;
+
+    my $lr = File::LogReader->new( filename => $filename );
+    while( my $line = $lr->read_line ) {
+        # do stuff with $line
+    }
+    $lr->commit;
+
+=head1 DESCRIPTION
+
+This module makes it easy to periodically check a file for new content
+and act on it.  For instance, you may want to parse a log file whenever
+it is updated.
+
+=cut
+
+our $VERSION = '0.01';
+
+=head2 METHODS
+
+=head3 new
+
+Create a new object.  Options:
+
+=over 4
+
+=item filename
+
+The name of the file to read from
+
+=item state_dir
+
+A directory to store state files.  Defaults to ~/.logreader
+
+=back
+
+=cut
+
 sub new {
     my $class = shift;
     my $self = {
@@ -12,6 +60,7 @@ sub new {
     };
 
     die 'filename is mandatory!' unless $self->{filename};
+    die 'file must exist!' unless -e $self->{filename};
 
     unless( -d $self->{state_dir} ) {
         mkdir $self->{state_dir} 
@@ -26,6 +75,12 @@ sub new {
 
     return $self;
 }
+
+=head3 read_line
+
+Return a single line of input from the file, or undef;
+
+=cut
 
 sub read_line {
     my $self = shift;
@@ -107,4 +162,56 @@ sub _fh {
     }
     return $self->{fh};
 }
+
+=head1 AUTHOR
+
+Luke Closs, C<< <file-logreader at 5thplane.com> >>
+
+=head1 BUGS
+
+Please report any bugs or feature requests through the web interface at
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=File-LogReader>.
+I will be notified, and then you'll automatically be notified of progress on
+your bug as I make changes.
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc Test::Mock::LWP
+
+You can also look for information at:
+
+=over 4
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/File-LogReader>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/d/File-LogReader>
+
+=item * RT: CPAN's request tracker
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=File-LogReader>
+
+=item * Search CPAN
+
+L<http://search.cpan.org/dist/File-LogReader>
+
+=back
+
+=head1 ACKNOWLEDGEMENTS
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2007 Luke Closs, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
+
 1;

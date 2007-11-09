@@ -6,7 +6,6 @@ use File::Path qw/rmtree/;
 use File::LogReader;
 
 my $state_dir = "t/state.$$";
-mkdir $state_dir or die "Can't mkdir $state_dir: $!";
 END { rmtree $state_dir if $state_dir }
 
 Read_a_static_file: {

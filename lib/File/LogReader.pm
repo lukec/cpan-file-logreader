@@ -1,7 +1,8 @@
 package File::LogReader;
 use strict;
 use warnings;
-use YAML;
+use Digest::SHA1 qw/sha1_hex/;
+use YAML qw/DumpFile LoadFile/;
 
 sub new {
     my $class = shift;
@@ -17,17 +18,19 @@ sub new {
             or die "Can't make the state directory: $self->{state_dir}: $!";
     }
 
+    (my $pathless = $self->{filename}) =~ s#.+/##;
+    $self->{state_file} = "$self->{state_dir}/$pathless.state";
+
     bless $self, $class;
+    $self->_set_file_position;
+
     return $self;
 }
 
 sub read_line {
     my $self = shift;
 
-    if (!exists $self->{fh}) {
-        open($self->{fh}, $self->{filename}) or die;
-    }
-    my $fh = $self->{fh};
+    my $fh = $self->_fh;
     return <$fh>;
 }
 
@@ -39,6 +42,69 @@ Saves the read position of the current file.
 
 sub commit {
     my $self = shift;
+    my $fh = $self->{fh};
+    die "Nothing to commit!" unless $fh;
+
+    my $pos = tell($fh);
+    DumpFile( $self->{state_file}, 
+        { 
+            pos => $pos, 
+            hash => $self->_calc_hash($pos),
+        },
+    );
 }
 
+sub _set_file_position {
+    my $self = shift;
+
+    return unless -f $self->{state_file};
+    my $state = LoadFile($self->{state_file});
+
+    my $fh = $self->_fh;
+    seek $fh, $state->{pos}, 1;
+    my $pos = tell($fh);
+
+    if ($pos < $state->{pos}) {
+        # warn "File is smaller! - seeking to beginning of file";
+        seek $fh, 0, 0;
+        return;
+    }
+
+    my $current_hash = $self->_calc_hash($state->{pos});
+    if ($current_hash ne $state->{hash}) {
+        # warn "hash doesn't match!  seeking to beginning of file";
+        seek $fh, 0, 0;
+        return;
+    }
+
+    # warn "hash matches - staying put";
+}
+
+sub _calc_hash {
+    my $self = shift;
+    my $from_pos = shift;
+
+    my $MAX_BYTES = 1024;
+
+    my $fh = $self->_fh;
+
+    # Compute a hash from the specified byte range
+    my $num_bytes = $from_pos < $MAX_BYTES ? $from_pos : $MAX_BYTES;
+    seek $fh, $from_pos - $num_bytes, 0;
+    
+    my $content;
+    my $rc = read $fh, $content, $num_bytes;
+    unless (defined $rc) {
+        die "Couldn't read $num_bytes bytes from $self->{filename}: $!";
+    }
+    return sha1_hex($content),
+}
+
+sub _fh {
+    my $self = shift;
+    if (!exists $self->{fh}) {
+        open($self->{fh}, $self->{filename}) or die;
+    }
+    return $self->{fh};
+}
 1;

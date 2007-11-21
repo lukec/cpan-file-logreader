@@ -158,7 +158,8 @@ sub _calc_hash {
 sub _fh {
     my $self = shift;
     if (!exists $self->{fh}) {
-        open($self->{fh}, $self->{filename}) or die;
+        open($self->{fh}, $self->{filename}) 
+            or die "Can't open $self->{filename}: $!";
     }
     return $self->{fh};
 }

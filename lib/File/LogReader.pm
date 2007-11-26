@@ -179,7 +179,7 @@ your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Test::Mock::LWP
+    perldoc File::LogReader
 
 You can also look for information at:
 
@@ -213,6 +213,5 @@ This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 =cut
-
 
 1;

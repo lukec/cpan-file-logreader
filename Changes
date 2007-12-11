@@ -1,2 +1,6 @@
+0.02 - Tue Dec 11 12:28:01 PST 2007
+ - skip tests on windows.  If anyone wants to add windows support, 
+   send me patches.
+
 0.01 - Mon Nov 26 11:38:26 PST 2007
  - Initial release

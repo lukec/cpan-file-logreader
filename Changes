@@ -1,3 +1,8 @@
+0.03 - not yet released
+ - Add file locking so that only one logreader object can
+   read the file at a time.  Special thanks to Matthew O'Connor, 
+   who is truly a pleasure to work with.
+
 0.02 - Tue Dec 11 12:28:01 PST 2007
  - skip tests on windows.  If anyone wants to add windows support, 
    send me patches.

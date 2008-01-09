@@ -10,7 +10,7 @@ BEGIN {
         plan skip_all => 'Not supported on windows, patches accepted';
     }
     else {
-        plan tests => 16;
+        plan tests => 19;
     }
 }
 
@@ -92,6 +92,32 @@ Read_a_static_file: {
         is $lr->read_line, "four\n";
         is $lr->read_line, undef;
         $lr->commit;
+    }
+}
+
+Locking: {
+    my $test_file = write_file("monkey\n");
+
+    No_multiple_access: {
+        my $first = File::LogReader->new( 
+            filename => $test_file,
+            state_dir => $state_dir,
+        );
+        ok $first, 'locker got the file';
+        my $second = File::LogReader->new(
+            filename => $test_file,
+            state_dir => $state_dir,
+        );
+        ok !$second, 'second logreader is undef';
+
+        $first->read_line;
+        $first->commit; # should release the lock
+
+        my $third = File::LogReader->new(
+            filename => $test_file,
+            state_dir => $state_dir,
+        );
+        ok $third, 'third logreader gets the lock';
     }
 }
 

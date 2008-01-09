@@ -1,9 +1,18 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More qw/no_plan/;
+use Test::More;
 use File::Path qw/rmtree/;
 use File::LogReader;
+
+BEGIN {
+    if ($^O =~/Win32/) {
+        plan skip_all => 'Not supported on windows, patches accepted';
+    }
+    else {
+        plan tests => 16;
+    }
+}
 
 my $state_dir = "t/state.$$";
 END { rmtree $state_dir if $state_dir }

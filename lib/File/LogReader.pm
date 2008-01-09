@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use Digest::SHA1 qw/sha1_hex/;
 use YAML qw/DumpFile LoadFile/;
+use Fcntl ':flock';
 
 =head1 NAME
 
@@ -30,7 +31,7 @@ it is updated.
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head2 METHODS
 
@@ -73,6 +74,7 @@ sub new {
     bless $self, $class;
     $self->_set_file_position;
 
+    return undef unless $self->_obtain_lock;
     return $self;
 }
 
@@ -107,6 +109,7 @@ sub commit {
             hash => $self->_calc_hash($pos),
         },
     );
+    $self->_release_lock;
 }
 
 sub _set_file_position {
@@ -164,6 +167,20 @@ sub _fh {
     return $self->{fh};
 }
 
+sub _release_lock {
+    my $self = shift;
+    undef $self->{_lock_fh};
+}
+
+sub _obtain_lock {
+    my $self = shift;
+    my $lock_file = "$self->{state_file}.lock";
+
+    open(my $lock_fh, ">$lock_file") or die "Can't open $lock_file: $!";
+    $self->{_lock_fh} = $lock_fh;
+    return flock($lock_fh, LOCK_EX | LOCK_NB);
+}
+
 =head1 AUTHOR
 
 Luke Closs, C<< <file-logreader at 5thplane.com> >>
@@ -203,11 +220,13 @@ L<http://search.cpan.org/dist/File-LogReader>
 
 =back
 
-=head1 ACKNOWLEDGEMENTS
+=head1 OTHER CONTRIBUTORS
+
+Thanks to Matthew O'Connor for pairing on the locking.
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2007 Luke Closs, all rights reserved.
+Copyright 2007,2008 Luke Closs, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

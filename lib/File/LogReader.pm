@@ -31,7 +31,7 @@ it is updated.
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head2 METHODS
 
@@ -99,7 +99,7 @@ Saves the read position of the current file.
 
 sub commit {
     my $self = shift;
-    my $fh = $self->{fh};
+    my $fh = $self->_fh;
     die "Nothing to commit!" unless $fh;
 
     my $pos = tell($fh);
